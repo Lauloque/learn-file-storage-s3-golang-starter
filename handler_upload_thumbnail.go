@@ -59,6 +59,7 @@ func (cfg *apiConfig) handlerUploadThumbnail(w http.ResponseWriter, r *http.Requ
 
 	if userID != videoMetadata.UserID {
 		respondWithError(w, http.StatusUnauthorized, "User doesn't own this video", nil)
+		return
 	}
 
 	contentType := header.Header.Get("Content-Type")
