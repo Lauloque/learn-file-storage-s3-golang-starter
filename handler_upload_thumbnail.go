@@ -70,7 +70,7 @@ func (cfg *apiConfig) handlerUploadThumbnail(w http.ResponseWriter, r *http.Requ
 	}
 
 	if mediatype != "image/jpeg" && mediatype != "image/png" {
-		respondWithError(w, http.StatusBadRequest, "Incorrect mediatype", fmt.Errorf(mediatype))
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Incorrect mediatype. Expected image/jpeg or image/png, got %s", mediatype), nil)
 		return
 	}
 
