@@ -116,3 +116,40 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 
 	respondWithJSON(w, http.StatusOK, videoMetadata)
 }
+
+func getVideoAspectRatio(filePath string) (string, error) {
+	cmd := exec.Command("ffprobe", "-v", "error", "-print_format", "json", "-show_streams", filePath)
+
+	var buffer bytes.Buffer
+	cmd.Stdout = &buffer
+
+	err := cmd.Run()
+	if err != nil {
+		return "", err
+	}
+
+	type ffprobeStreams struct {
+		Streams []struct {
+			Index              int    `json:"index"`
+			CodecName          string `json:"codec_name,omitempty"`
+			Profile            string `json:"profile,omitempty"`
+			CodecType          string `json:"codec_type"`
+			CodecTagString     string `json:"codec_tag_string"`
+			Width              int    `json:"width,omitempty"`
+			Height             int    `json:"height,omitempty"`
+			DisplayAspectRatio string `json:"display_aspect_ratio,omitempty"`
+		} `json:"streams"`
+	}
+
+	var streams ffprobeStreams
+	if err := json.Unmarshal(buffer.Bytes(), &streams); err != nil {
+		return "", err
+	}
+
+	switch streams.Streams[0].DisplayAspectRatio {
+	case "16:9", "9:16":
+		return streams.Streams[0].DisplayAspectRatio, nil
+	default:
+		return "other", nil
+	}
+}
