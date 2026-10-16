@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"crypto/rand"
+	"encoding/json"
 	"fmt"
 	"io"
 	"mime"
 	"net/http"
 	"os"
+	"os/exec"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/bootdotdev/learn-file-storage-s3-golang-starter/internal/auth"
@@ -85,13 +88,30 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	aspectRatio, err := getVideoAspectRatio(outputTempFile.Name())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Unable to get the video's ffprobe metadata", err)
+		return
+	}
+
+	switch aspectRatio {
+	case "16:9":
+		aspectRatio = "landscape"
+		break
+	case "9:16":
+		aspectRatio = "portrait"
+		break
+	default:
+		aspectRatio = "other"
+	}
+
 	rnd := make([]byte, 32)
 	_, err = rand.Read(rnd)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Unable to generate 32-byte random", err)
 		return
 	}
-	filename := fmt.Sprintf("%x.mp4", rnd)
+	filename := fmt.Sprintf("%s/%x.mp4", aspectRatio, rnd)
 
 	_, err = cfg.s3Client.PutObject(r.Context(), &s3.PutObjectInput{
 		Bucket:      &cfg.s3Bucket,
