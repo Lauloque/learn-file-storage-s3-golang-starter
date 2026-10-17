@@ -5,16 +5,19 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"mime"
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/bootdotdev/learn-file-storage-s3-golang-starter/internal/auth"
+	"github.com/bootdotdev/learn-file-storage-s3-golang-starter/internal/database"
 	"github.com/google/uuid"
 )
 
@@ -221,4 +224,23 @@ func generatePresignedURL(s3Client *s3.Client, bucket, key string, expireTime ti
 	}
 
 	return r.URL, nil
+}
+
+func (cfg *apiConfig) dbVideoToSignedVideo(video database.Video) (database.Video, error) {
+	if video.VideoURL == nil {
+		return video, errors.New("empty video url")
+	}
+
+	bucketKey := strings.Split(*video.VideoURL, ",")
+	if len(bucketKey) != 2 {
+		return video, fmt.Errorf("invalid video url: %s", *video.VideoURL)
+	}
+
+	newUrl, err := generatePresignedURL(cfg.s3Client, bucketKey[0], bucketKey[1], (time.Minute * 5))
+	if err != nil {
+		return video, err
+	}
+
+	video.VideoURL = &newUrl
+	return video, nil
 }
