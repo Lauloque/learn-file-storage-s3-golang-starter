@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"mime"
@@ -234,7 +233,7 @@ func generatePresignedURL(s3Client *s3.Client, bucket, key string, expireTime ti
 
 func (cfg *apiConfig) dbVideoToSignedVideo(video database.Video) (database.Video, error) {
 	if video.VideoURL == nil {
-		return video, errors.New("empty video url")
+		return video, nil
 	}
 
 	bucketKey := strings.Split(*video.VideoURL, ",")
