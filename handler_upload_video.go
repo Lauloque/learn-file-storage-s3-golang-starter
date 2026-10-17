@@ -116,7 +116,7 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 		respondWithError(w, http.StatusInternalServerError, "Unable to generate 32-byte random", err)
 		return
 	}
-	filename := fmt.Sprintf("%s/%x.mp4", aspectRatio, rnd)
+	key := fmt.Sprintf("%s/%x.mp4", aspectRatio, rnd)
 
 	processedFilePath, err := processVideoForFastStart(outputTempFile.Name())
 	if err != nil {
@@ -134,7 +134,7 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 
 	_, err = cfg.s3Client.PutObject(r.Context(), &s3.PutObjectInput{
 		Bucket:      &cfg.s3Bucket,
-		Key:         &filename,
+		Key:         &key,
 		Body:        processedFileBody,
 		ContentType: &mediatype,
 	})
@@ -143,7 +143,7 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	videoURL := fmt.Sprintf("%s,%s", cfg.s3Bucket, filename)
+	videoURL := fmt.Sprintf("%s,%s", cfg.s3Bucket, key)
 
 	videoMetadata.VideoURL = &videoURL
 
