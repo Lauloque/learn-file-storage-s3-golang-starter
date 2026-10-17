@@ -113,10 +113,24 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 	}
 	filename := fmt.Sprintf("%s/%x.mp4", aspectRatio, rnd)
 
+	processedFilePath, err := processVideoForFastStart(outputTempFile.Name())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error processing video file", err)
+		return
+	}
+	defer os.Remove(processedFilePath)
+
+	processedFileBody, err := os.Open(processedFilePath)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not open processed video file", err)
+		return
+	}
+	defer processedFileBody.Close()
+
 	_, err = cfg.s3Client.PutObject(r.Context(), &s3.PutObjectInput{
 		Bucket:      &cfg.s3Bucket,
 		Key:         &filename,
-		Body:        outputTempFile,
+		Body:        processedFileBody,
 		ContentType: &mediatype,
 	})
 	if err != nil {
