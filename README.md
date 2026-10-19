@@ -2,6 +2,9 @@
 
 This repo contains the starter code for the Tubely application - the #1 tool for engagement bait - for the "Learn File Servers and CDNs with S3 and CloudFront" [course](https://www.boot.dev/courses/learn-file-servers-s3-cloudfront-golang) on [boot.dev](https://www.boot.dev)
 
+<img width="900" height="550" alt="image" src="https://github.com/user-attachments/assets/32ddb7d7-5f8e-4691-a0c0-6ddcb23a039e" />
+
+
 ## Quickstart
 
 *This is to be used as a *reference\* in case you need it, you should follow the instructions in the course rather than trying to do everything here.
